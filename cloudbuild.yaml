@@ -1,0 +1,50 @@
+steps:
+  # Build the frontend container
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/rtyo-frontend', '.']
+
+  # Build the API container
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/rtyo-api', './api']
+
+  # Push the frontend container
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/rtyo-frontend']
+
+  # Push the API container
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/rtyo-api']
+
+  # Deploy frontend to Cloud Run
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'rtyo-frontend'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/rtyo-frontend'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+
+  # Deploy API to Cloud Run
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'rtyo-api'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/rtyo-api'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--set-env-vars'
+      - 'DEEPSEEK_API_KEY=${_DEEPSEEK_API_KEY},SUPABASE_URL=${_SUPABASE_URL},SUPABASE_SERVICE_KEY=${_SUPABASE_SERVICE_KEY}'
+
+images:
+  - 'gcr.io/$PROJECT_ID/rtyo-frontend'
+  - 'gcr.io/$PROJECT_ID/rtyo-api'
